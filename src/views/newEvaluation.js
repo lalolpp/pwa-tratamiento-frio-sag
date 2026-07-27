@@ -20,8 +20,14 @@ let currentState = {
   file: null,
 };
 
+let unsubscribeAuth = null;
+
 export function renderNewEvaluation(container) {
-  requireAuth((user) => {
+  if (unsubscribeAuth) {
+    unsubscribeAuth();
+    unsubscribeAuth = null;
+  }
+  unsubscribeAuth = requireAuth((user) => {
     currentState = { step: 1, metadata: {}, parsedData: null, sensorConfig: [], protocol: null, result: null, file: null };
     container.innerHTML = buildWizardHTML();
     attachWizardEvents(container, user);
@@ -30,40 +36,40 @@ export function renderNewEvaluation(container) {
 
 function buildWizardHTML() {
   return `
-    <div class="min-h-screen bg-gray-50">
-      <nav class="bg-white shadow-sm border-b">
+    <div class="min-h-screen">
+      <nav class="glass-nav sticky top-0 z-50">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex items-center h-16 gap-4">
-            <a href="#/" class="text-gray-500 hover:text-gray-700">
+            <a href="#/" class="text-white/50 hover:text-white/80 transition-colors">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
               </svg>
             </a>
-            <span class="font-semibold">Nueva Evaluación</span>
+            <span class="font-semibold text-white">Nueva Evaluación</span>
           </div>
         </div>
       </nav>
 
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Steps indicator -->
-        <div class="flex items-center justify-center mb-8">
+        <div class="flex items-center justify-center mb-8 fade-in-up">
           <div class="flex items-center">
-            <div id="step1Indicator" class="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold text-sm">1</div>
-            <span class="ml-2 text-sm font-medium text-primary-600">Datos</span>
+            <div id="step1Indicator" class="step-active">1</div>
+            <span class="ml-2 text-sm font-medium text-white">Datos</span>
           </div>
-          <div class="w-16 h-0.5 bg-gray-300 mx-4" id="line1"></div>
+          <div class="step-line mx-4" id="line1"></div>
           <div class="flex items-center">
-            <div id="step2Indicator" class="w-10 h-10 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center font-bold text-sm">2</div>
-            <span class="ml-2 text-sm font-medium text-gray-500">Archivo</span>
+            <div id="step2Indicator" class="step-inactive">2</div>
+            <span class="ml-2 text-sm font-medium text-white/40">Archivo</span>
           </div>
-          <div class="w-16 h-0.5 bg-gray-300 mx-4" id="line2"></div>
+          <div class="step-line mx-4" id="line2"></div>
           <div class="flex items-center">
-            <div id="step3Indicator" class="w-10 h-10 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center font-bold text-sm">3</div>
-            <span class="ml-2 text-sm font-medium text-gray-500">Resultado</span>
+            <div id="step3Indicator" class="step-inactive">3</div>
+            <span class="ml-2 text-sm font-medium text-white/40">Resultado</span>
           </div>
         </div>
 
-        <div id="stepContent" class="card">
+        <div id="stepContent" class="glass-card-static fade-in-up">
         </div>
       </div>
     </div>
@@ -79,66 +85,95 @@ function renderStep1(container, user) {
   updateIndicators(1);
 
   stepContent.innerHTML = `
-    <h2 class="text-xl font-bold mb-6">Datos del Tratamiento</h2>
+    <h2 class="text-xl font-bold mb-6 text-white">Datos del Tratamiento</h2>
     <form id="step1Form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <label class="label">Cámara</label>
-        <input type="text" id="cameraName" class="input-field" placeholder="Ej: CA-05" required />
+        <input type="text" id="cameraName" class="glass-input" placeholder="Ej: CA-05" required />
       </div>
       <div>
         <label class="label">Producto *</label>
-        <select id="product" class="input-field" required>
+        <select id="product" class="glass-input" required>
           <option value="">Seleccionar...</option>
           ${Object.values(SAG_FAMILIES).flatMap(f => f.species).map(p => `<option value="${p}">${p}</option>`).join('')}
         </select>
       </div>
       <div>
         <label class="label">Variedad *</label>
-        <select id="variety" class="input-field" required disabled>
+        <select id="variety" class="glass-input" required disabled>
           <option value="">Seleccionar producto primero...</option>
         </select>
       </div>
       <div>
         <label class="label">País Destino *</label>
-        <select id="destinationCountry" class="input-field" required>
+        <select id="destinationCountry" class="glass-input" required>
           <option value="">Seleccionar...</option>
           ${SAG_COUNTRIES.map(c => `<option value="${c.name}">${c.name}</option>`).join('')}
         </select>
       </div>
       <div>
         <label class="label">Fecha Inicio Tratamiento *</label>
-        <input type="date" id="startDate" class="input-field" required />
+        <input type="date" id="startDate" class="glass-input" required />
       </div>
       <div>
         <label class="label">Fecha Término Tratamiento *</label>
-        <input type="date" id="endDate" class="input-field" required />
+        <input type="date" id="endDate" class="glass-input" required />
       </div>
       <div>
         <label class="label">Código de Lote</label>
-        <input type="text" id="lotCode" class="input-field" placeholder="Ej: L-2026-001" />
+        <input type="text" id="lotCode" class="glass-input" placeholder="Ej: L-2026-001" />
       </div>
       <div>
         <label class="label">Tipo de Almacenamiento *</label>
-        <select id="storageType" class="input-field" required>
+        <select id="storageType" class="glass-input" required>
           <option value="embalada">Fruta Embalada</option>
           <option value="bins">Bins</option>
         </select>
       </div>
       <div>
-        <label class="label">Temperatura Objetivo (°C)</label>
-        <input type="number" id="temperatureTarget" class="input-field" step="0.1" value="-0.5" placeholder="-0.5" />
+        <label class="label">Temperatura Mínima (°C) <span class="text-xs text-white/40">(ref.)</span></label>
+        <input type="number" id="temperatureMin" class="glass-input" step="0.1" value="-1.5" placeholder="-1.5" />
       </div>
       <div>
-        <label class="label">Tolerancia (± °C)</label>
-        <input type="number" id="temperatureTolerance" class="input-field" step="0.1" value="0.5" placeholder="0.5" />
+        <label class="label">Temperatura Requerida (°C)</label>
+        <input type="number" id="temperatureTarget" class="glass-input" step="0.1" value="-0.5" placeholder="-0.5" />
+      </div>
+      <div>
+        <label class="label">Temperatura Máxima (°C)</label>
+        <input type="number" id="temperatureMax" class="glass-input" step="0.1" value="0.5" placeholder="0.5" />
       </div>
       <div>
         <label class="label">Duración Requerida (días)</label>
-        <input type="number" id="durationDays" class="input-field" value="42" placeholder="42" />
+        <input type="number" id="durationDays" class="glass-input" value="42" placeholder="42" />
+      </div>
+      <div class="md:col-span-2 border-t border-white/10 pt-4 mt-2">
+        <div class="flex items-center gap-3 mb-3">
+          <input type="checkbox" id="energyRestriction" class="w-4 h-4 rounded" style="accent-color: #3b82f6;" />
+          <label for="energyRestriction" class="font-medium text-white/80">Régimen horario de invierno (restricción energética)</label>
+        </div>
+        <div id="energyRestrictionConfig" class="hidden ml-7 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <label class="label text-xs">Hora Inicio Restricción</label>
+            <input type="time" id="restrictionStart" class="glass-input" value="17:45" />
+          </div>
+          <div>
+            <label class="label text-xs">Hora Término Restricción</label>
+            <input type="time" id="restrictionEnd" class="glass-input" value="23:30" />
+          </div>
+          <div>
+            <label class="label text-xs">Máx. Desviación Durante Restricción (°C)</label>
+            <input type="number" id="restrictionMaxTemp" class="glass-input" step="0.1" value="5.0" placeholder="5.0" />
+          </div>
+          <div>
+            <label class="label text-xs">Recuperación Esperada (min)</label>
+            <input type="number" id="restrictionRecoveryMin" class="glass-input" value="60" placeholder="60" />
+          </div>
+        </div>
+        <p class="text-xs text-white/30 ml-7 mt-1">Durante la restricción se detienen los sistemas trifásicos. Se permite subida de temperatura controlada.</p>
       </div>
       <div class="md:col-span-2">
         <label class="label">Observaciones</label>
-        <textarea id="observations" class="input-field" rows="2" placeholder="Notas adicionales..."></textarea>
+        <textarea id="observations" class="glass-input" rows="2" placeholder="Notas adicionales..."></textarea>
       </div>
       <div class="md:col-span-2 flex justify-end gap-3 mt-4">
         <a href="#/" class="btn-secondary">Cancelar</a>
@@ -161,6 +196,7 @@ function renderStep1(container, user) {
 
   container.querySelector('#step1Form').addEventListener('submit', (e) => {
     e.preventDefault();
+    const energyRestriction = container.querySelector('#energyRestriction').checked;
     currentState.metadata = {
       cameraName: container.querySelector('#cameraName').value,
       product: container.querySelector('#product').value,
@@ -170,13 +206,25 @@ function renderStep1(container, user) {
       endDate: container.querySelector('#endDate').value,
       lotCode: container.querySelector('#lotCode').value,
       storageType: container.querySelector('#storageType').value,
-      temperatureTarget: parseFloat(container.querySelector('#temperatureTarget').value) || -0.5,
-      temperatureTolerance: parseFloat(container.querySelector('#temperatureTolerance').value) || 0.5,
-      durationDays: parseInt(container.querySelector('#durationDays').value) || 42,
+      temperatureMin: container.querySelector('#temperatureMin').value !== '' ? parseFloat(container.querySelector('#temperatureMin').value) : -1.5,
+      temperatureTarget: container.querySelector('#temperatureTarget').value !== '' ? parseFloat(container.querySelector('#temperatureTarget').value) : -0.5,
+      temperatureMax: container.querySelector('#temperatureMax').value !== '' ? parseFloat(container.querySelector('#temperatureMax').value) : 0.5,
+      durationDays: container.querySelector('#durationDays').value !== '' ? parseInt(container.querySelector('#durationDays').value) : 42,
       observations: container.querySelector('#observations').value,
+      energyRestriction,
+      restrictionStart: container.querySelector('#restrictionStart').value || '17:45',
+      restrictionEnd: container.querySelector('#restrictionEnd').value || '23:30',
+      restrictionMaxTemp: parseFloat(container.querySelector('#restrictionMaxTemp').value) || 5.0,
+      restrictionRecoveryMin: parseInt(container.querySelector('#restrictionRecoveryMin').value) || 60,
     };
     currentState.step = 2;
     renderStep2(container, user);
+  });
+
+  const energyToggle = container.querySelector('#energyRestriction');
+  const energyConfig = container.querySelector('#energyRestrictionConfig');
+  energyToggle.addEventListener('change', () => {
+    energyConfig.classList.toggle('hidden', !energyToggle.checked);
   });
 }
 
@@ -185,26 +233,26 @@ function renderStep2(container, user) {
   updateIndicators(2);
 
   stepContent.innerHTML = `
-    <h2 class="text-xl font-bold mb-6">Cargar Archivo de Registro</h2>
-    <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-primary-400 transition-colors cursor-pointer">
-      <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <h2 class="text-xl font-bold mb-6 text-white">Cargar Archivo de Registro</h2>
+    <div id="dropZone" class="rounded-xl p-12 text-center cursor-pointer transition-all duration-300 hover:scale-[1.01]" style="border: 2px dashed rgba(255,255,255,0.15); background: rgba(255,255,255,0.03);">
+      <svg class="w-12 h-12 text-white/30 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
       </svg>
-      <p class="text-gray-600 font-medium">Arrastra el archivo Excel aquí</p>
-      <p class="text-gray-400 text-sm mt-1">o haz clic para seleccionar</p>
+      <p class="text-white/70 font-medium">Arrastra el archivo Excel aquí</p>
+      <p class="text-white/40 text-sm mt-1">o haz clic para seleccionar</p>
       <input type="file" id="fileInput" class="hidden" accept=".xlsx,.xls,.csv" />
     </div>
 
     <div id="fileInfo" class="hidden mt-6">
-      <div class="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="flex items-center gap-3 p-4 rounded-xl" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);">
+        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
         </svg>
         <div>
-          <p class="font-medium text-blue-800" id="fileName"></p>
-          <p class="text-sm text-blue-600" id="fileStats"></p>
+          <p class="font-medium text-blue-300" id="fileName"></p>
+          <p class="text-sm text-blue-400/70" id="fileStats"></p>
         </div>
-        <button id="removeFile" class="ml-auto text-blue-400 hover:text-red-500">
+        <button id="removeFile" class="ml-auto text-white/30 hover:text-red-400 transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
@@ -213,19 +261,19 @@ function renderStep2(container, user) {
     </div>
 
     <div id="previewTable" class="hidden mt-6">
-      <h3 class="font-semibold mb-3">Vista Previa (primeros registros)</h3>
-      <div class="table-container max-h-64 overflow-y-auto border rounded-lg">
+      <h3 class="font-semibold mb-3 text-white">Vista Previa (primeros registros)</h3>
+      <div class="table-container max-h-64 overflow-y-auto rounded-xl" style="border: 1px solid rgba(255,255,255,0.08);">
         <table class="data-table text-xs" id="previewContent">
         </table>
       </div>
     </div>
 
-    <div id="parseError" class="hidden mt-4 p-4 bg-red-50 rounded-lg text-danger text-sm"></div>
+    <div id="parseError" class="hidden mt-4 p-4 rounded-xl text-sm" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #f87171;"></div>
 
     <div id="sensorConfigSection" class="hidden mt-6">
-      <h3 class="font-semibold mb-3">Configuración de Sensores</h3>
-      <p class="text-sm text-gray-500 mb-4">Asigna el rol de cada sensor detectado en el archivo. Los sensores marcados como "Excluido" no se usarán en la evaluación.</p>
-      <div class="table-container border rounded-lg overflow-x-auto">
+      <h3 class="font-semibold mb-3 text-white">Configuración de Sensores</h3>
+      <p class="text-sm text-white/50 mb-4">Asigna el rol de cada sensor detectado en el archivo. Los sensores marcados como "Excluido" no se usarán en la evaluación.</p>
+      <div class="rounded-xl overflow-x-auto" style="border: 1px solid rgba(255,255,255,0.08);">
         <table class="data-table text-sm min-w-full">
           <thead>
             <tr>
@@ -255,16 +303,19 @@ function renderStep2(container, user) {
 
   dropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
-    dropZone.classList.add('border-primary-400', 'bg-primary-50');
+    dropZone.style.borderColor = 'rgba(96,165,250,0.5)';
+    dropZone.style.background = 'rgba(59,130,246,0.08)';
   });
 
   dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('border-primary-400', 'bg-primary-50');
+    dropZone.style.borderColor = '';
+    dropZone.style.background = '';
   });
 
   dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
-    dropZone.classList.remove('border-primary-400', 'bg-primary-50');
+    dropZone.style.borderColor = '';
+    dropZone.style.background = '';
     if (e.dataTransfer.files.length) {
       handleFile(e.dataTransfer.files[0], container);
     }
@@ -369,23 +420,23 @@ function showSensorConfig(container, parsedData) {
       : '-';
 
     return `
-      <tr class="${sensor.role === 'excluido' ? 'bg-gray-50 opacity-60' : ''}" data-sensor-idx="${idx}">
-        <td class="px-4 py-3 font-medium">
+      <tr class="${sensor.role === 'excluido' ? 'opacity-40' : ''}" data-sensor-idx="${idx}">
+        <td class="px-4 py-3 font-medium text-white">
           ${sensor.originalName}
-          <span class="text-xs text-gray-400 block">${stats ? stats.valid + ' registros válidos' : ''}</span>
+          <span class="text-xs text-white/40 block">${stats ? stats.valid + ' registros válidos' : ''}</span>
         </td>
         <td class="px-4 py-3">
-          <select class="input-field text-sm sensor-role-select" data-idx="${idx}">
+          <select class="glass-input text-sm sensor-role-select" data-idx="${idx}">
             <option value="pulpa" ${sensor.role === 'pulpa' ? 'selected' : ''}>Pulpa</option>
             <option value="ambiente" ${sensor.role === 'ambiente' ? 'selected' : ''}>Ambiente</option>
             <option value="excluido" ${sensor.role === 'excluido' ? 'selected' : ''}>Excluido</option>
           </select>
         </td>
         <td class="px-4 py-3">
-          <input type="text" class="input-field text-sm sensor-custom-name" data-idx="${idx}" value="${sensor.customName}" placeholder="Nombre personalizado" />
+          <input type="text" class="glass-input text-sm sensor-custom-name" data-idx="${idx}" value="${sensor.customName}" placeholder="Nombre personalizado" />
         </td>
-        <td class="px-4 py-3 text-gray-600">${sampleValue}${sampleValue !== '-' ? '°C' : ''}</td>
-        <td class="px-4 py-3 text-gray-600">${avg}${avg !== '-' ? '°C' : ''}</td>
+        <td class="px-4 py-3 text-white/60">${sampleValue}${sampleValue !== '-' ? '°C' : ''}</td>
+        <td class="px-4 py-3 text-white/60">${avg}${avg !== '-' ? '°C' : ''}</td>
       </tr>
     `;
   }).join('');
@@ -396,9 +447,9 @@ function showSensorConfig(container, parsedData) {
       currentState.sensorConfig[idx].role = sel.value;
       const row = sel.closest('tr');
       if (sel.value === 'excluido') {
-        row.classList.add('bg-gray-50', 'opacity-60');
+        row.classList.add('opacity-40');
       } else {
-        row.classList.remove('bg-gray-50', 'opacity-60');
+        row.classList.remove('opacity-40');
       }
     });
   });
@@ -431,16 +482,16 @@ function performEvaluation(container, user) {
     const stepContent = container.querySelector('#stepContent');
     stepContent.innerHTML = `
       <div class="text-center py-12">
-        <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.2);">
+          <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>
           </svg>
         </div>
-        <h3 class="text-lg font-semibold text-gray-800 mb-2">Protocolo No Encontrado</h3>
-        <p class="text-gray-500 mb-6">No existe un protocolo configurado para:<br/>
-          <strong>${meta.product} - ${meta.variety} - ${meta.destinationCountry}</strong>
+        <h3 class="text-lg font-semibold text-white mb-2">Protocolo No Encontrado</h3>
+        <p class="text-white/50 mb-6">No existe un protocolo configurado para:<br/>
+          <strong class="text-white/80">${meta.product} - ${meta.variety} - ${meta.destinationCountry}</strong>
         </p>
-        <p class="text-sm text-gray-400 mb-6">Configure el protocolo en Admin → Protocolos</p>
+        <p class="text-sm text-white/30 mb-6">Configure el protocolo en Admin → Protocolos</p>
         <div class="flex justify-center gap-3">
           <a href="#/admin/protocolos-sag" class="btn-primary">Configurar Protocolo</a>
           <a href="#/" class="btn-secondary">Volver al Dashboard</a>
@@ -466,82 +517,101 @@ function renderStep3(container, user) {
   const isApproved = result.status === 'aprobado';
 
   stepContent.innerHTML = `
-    <div class="text-center mb-8">
-      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full ${isApproved ? 'bg-green-100' : 'bg-red-100'} mb-4">
+    <div class="text-center mb-8 scale-in">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 ${isApproved ? 'hero-approved' : 'hero-rejected'}" style="box-shadow: 0 0 30px ${isApproved ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'};">
         ${isApproved
-          ? '<svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
-          : '<svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'
+          ? '<svg class="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+          : '<svg class="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'
         }
       </div>
-      <h2 class="text-2xl font-bold ${isApproved ? 'text-green-700' : 'text-red-700'}">
+      <h2 class="text-2xl font-bold ${isApproved ? 'text-green-400' : 'text-red-400'}">
         ${isApproved ? 'APROBADO' : 'NO APROBADO'}
       </h2>
-      <p class="text-gray-500 mt-1">${result.summary}</p>
+      <p class="text-white/50 mt-1">${result.summary}</p>
     </div>
 
     <!-- Treatment Info -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-sm">
-      <div class="bg-gray-50 p-3 rounded-lg">
-        <span class="text-gray-500 block">Cámara</span>
-        <span class="font-semibold">${meta.cameraName}</span>
+      <div class="meta-card">
+        <span class="text-white/50 block">Cámara</span>
+        <span class="font-semibold text-white">${meta.cameraName}</span>
       </div>
-      <div class="bg-gray-50 p-3 rounded-lg">
-        <span class="text-gray-500 block">Producto</span>
-        <span class="font-semibold">${meta.product} ${meta.variety}</span>
+      <div class="meta-card">
+        <span class="text-white/50 block">Producto</span>
+        <span class="font-semibold text-white">${meta.product} ${meta.variety}</span>
       </div>
-      <div class="bg-gray-50 p-3 rounded-lg">
-        <span class="text-gray-500 block">Destino</span>
-        <span class="font-semibold">${meta.destinationCountry}</span>
+      <div class="meta-card">
+        <span class="text-white/50 block">Destino</span>
+        <span class="font-semibold text-white">${meta.destinationCountry}</span>
       </div>
-      <div class="bg-gray-50 p-3 rounded-lg">
-        <span class="text-gray-500 block">Protocolo</span>
-        <span class="font-semibold">${protocol.pais || '-'} · SDP ${protocol.categoria_SDP || '-'}</span>
+      <div class="meta-card">
+        <span class="text-white/50 block">Protocolo</span>
+        <span class="font-semibold text-white">${protocol.pais || '-'} · SDP ${protocol.categoria_SDP || '-'}</span>
       </div>
     </div>
 
+    <!-- Parameters Used -->
+    ${result.params ? `
+    <div class="p-4 rounded-xl mb-6 text-sm" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);">
+      <h4 class="font-semibold text-white/80 mb-2">Parámetros de Evaluación</h4>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div><span class="text-white/50">Temp. Mín:</span> <span class="font-medium text-white">${result.params.temperatureMin}°C</span></div>
+        <div><span class="text-white/50">Temp. Requerida:</span> <span class="font-medium text-white">${result.params.temperatureTarget}°C</span></div>
+        <div><span class="text-white/50">Temp. Máx:</span> <span class="font-medium text-white">${result.params.temperatureMax}°C</span></div>
+        <div><span class="text-white/50">Duración:</span> <span class="font-medium text-white">${result.params.durationDays} días</span></div>
+        <div><span class="text-white/50">Máx. Gap:</span> <span class="font-medium text-white">${result.params.maxGapHours}h</span></div>
+        <div><span class="text-white/50">Frecuencia:</span> <span class="font-medium text-white">cada ${result.params.recordingIntervalHours}h</span></div>
+        <div><span class="text-white/50">Mín. Sensores Pulpa:</span> <span class="font-medium text-white">${result.params.minSensorsPulpa}</span></div>
+        <div><span class="text-white/50">Restricción:</span> <span class="font-medium text-white">${meta.energyRestriction ? meta.restrictionStart + ' - ' + meta.restrictionEnd : 'No'}</span></div>
+      </div>
+    </div>
+    ` : ''}
+
     <!-- Validations -->
-    <h3 class="font-semibold mb-3">Validaciones</h3>
+    <h3 class="font-semibold mb-3 text-white">Validaciones</h3>
     <div class="space-y-3 mb-6">
       ${result.validations.map(v => `
-          <div class="flex items-start gap-3 p-3 rounded-lg ${v.status === 'cumple' ? 'bg-green-50' : v.status === 'no_cumple' ? 'bg-red-50' : v.status === 'info' ? 'bg-blue-50' : 'bg-yellow-50'}">
+          <div class="p-3 rounded-xl ${v.status === 'cumple' ? 'validation-pass' : v.status === 'no_cumple' ? 'validation-fail' : 'validation-info'} fade-in-up">
+          <div class="flex items-start gap-3">
           <div class="flex-shrink-0 mt-0.5">
             ${v.status === 'cumple'
-              ? '<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+              ? '<svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
               : v.status === 'info'
               ? '<svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
               : '<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'
             }
           </div>
-          <div>
-            <span class="font-medium ${v.status === 'cumple' ? 'text-green-800' : v.status === 'info' ? 'text-blue-800' : 'text-red-800'}">${v.name}</span>
-            <p class="text-sm ${v.status === 'cumple' ? 'text-green-600' : v.status === 'info' ? 'text-blue-600' : 'text-red-600'}">${v.detail}</p>
+          <div class="flex-1">
+            <span class="font-medium ${v.status === 'cumple' ? 'text-green-300' : v.status === 'info' ? 'text-blue-300' : 'text-red-300'}">${v.name}</span>
+            <p class="text-sm whitespace-pre-line ${v.status === 'cumple' ? 'text-green-400/70' : v.status === 'info' ? 'text-blue-400/70' : 'text-red-400/70'}">${v.detail}</p>
+          </div>
           </div>
         </div>
       `).join('')}
     </div>
 
     ${result.deviations && result.deviations.length > 0 ? `
-      <h3 class="font-semibold mb-3 text-red-700">Desviaciones Detectadas</h3>
-      <div class="table-container mb-6">
+      <h3 class="font-semibold mb-3 text-red-400">Desviaciones Detectadas (${result.deviations.length} registros fuera de rango)</h3>
+      <div class="rounded-xl overflow-hidden mb-6" style="border: 1px solid rgba(239,68,68,0.15);">
         <table class="data-table text-sm">
           <thead>
             <tr>
               <th>Sensor</th>
               <th>Fecha/Hora</th>
               <th>Temperatura</th>
-              <th>Máx Permitida</th>
+              <th>Rango Permitido</th>
             </tr>
           </thead>
           <tbody>
-            ${result.deviations.slice(0, 20).map(d => `
+            ${result.deviations.slice(0, 30).map(d => `
               <tr>
                 <td>${d.sensor}</td>
                 <td>${d.timestamp.toLocaleString('es-CL')}</td>
-                <td class="text-red-600 font-medium">${d.value}°C</td>
-                <td>${d.maxAllowed}°C</td>
+                <td class="text-red-400 font-medium">${d.value}°C</td>
+                <td>${d.minAllowed || d.maxAllowed ? `${d.minAllowed ?? '-'} a ${d.maxAllowed ?? '-'}` : `≤ ${d.maxAllowed}°C`}</td>
               </tr>
             `).join('')}
-            ${result.deviations.length > 20 ? `<tr><td colspan="4" class="text-center text-gray-400">... y ${result.deviations.length - 20} más</td></tr>` : ''}
+            ${result.deviations.length > 30 ? `<tr><td colspan="4" class="text-center text-white/30 py-2">... y ${result.deviations.length - 30} registros más fuera de rango</td></tr>` : ''}
           </tbody>
         </table>
       </div>
@@ -748,10 +818,20 @@ function updateIndicators(step) {
     const indicator = document.getElementById(`step${i}Indicator`);
     if (!indicator) continue;
 
-    if (i <= step) {
-      indicator.className = 'w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold text-sm';
+    if (i < step) {
+      indicator.className = 'step-completed';
+      indicator.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+    } else if (i === step) {
+      indicator.className = 'step-active';
+      indicator.innerHTML = i;
     } else {
-      indicator.className = 'w-10 h-10 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center font-bold text-sm';
+      indicator.className = 'step-inactive';
+      indicator.innerHTML = i;
     }
   }
+
+  const line1 = document.getElementById('line1');
+  const line2 = document.getElementById('line2');
+  if (line1) line1.className = step >= 2 ? 'step-line-active' : 'step-line';
+  if (line2) line2.className = step >= 3 ? 'step-line-active' : 'step-line';
 }
