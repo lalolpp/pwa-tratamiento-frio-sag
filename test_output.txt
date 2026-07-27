@@ -1,0 +1,6 @@
+FOUND HEADERS at row 43
+  dateCol: 11
+  timeCol: 25
+  sensors: [{"col":34,"name":"Pulpa1"},{"col":45,"name":"Pulpa2"},{"col":50,"name":"Pulpa3"},{"col":59,"name":"Pulpa4"},{"col":71,"name":"%HR"}]
+  data starts at row 44
+  total data rows: 13711

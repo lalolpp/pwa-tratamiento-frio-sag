@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.firebase/
+*.log
+.env
+.env.local
+*.tmp
+output*.txt
+err*.txt
+inspect*.cjs
+test_parse*.cjs
