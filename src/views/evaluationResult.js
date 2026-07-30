@@ -152,12 +152,14 @@ function renderResult(container, evalData) {
                 <div class="flex-shrink-0 mt-0.5">
                   ${v.status === 'cumple'
                     ? '<svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+                    : v.status === 'info'
+                    ? '<svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
                     : '<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'
                   }
                 </div>
                 <div>
-                  <span class="font-medium ${v.status === 'cumple' ? 'text-green-300' : 'text-red-300'}">${v.name}</span>
-                  <p class="text-sm ${v.status === 'cumple' ? 'text-green-400/70' : 'text-red-400/70'}">${v.detail}</p>
+                  <span class="font-medium ${v.status === 'cumple' ? 'text-green-300' : v.status === 'info' ? 'text-blue-300' : 'text-red-300'}">${v.name}</span>
+                  <p class="text-sm ${v.status === 'cumple' ? 'text-green-400/70' : v.status === 'info' ? 'text-blue-400/70' : 'text-red-400/70'}">${v.detail}</p>
                 </div>
               </div>
             `).join('')}

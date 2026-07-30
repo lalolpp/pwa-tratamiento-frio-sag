@@ -1,10 +1,11 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   root: '.',
   publicDir: 'public',
   build: {
+    target: 'esnext',
     outDir: 'dist',
     rollupOptions: {
       input: {
@@ -15,9 +16,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
-      'firebase/app': resolve(__dirname, 'src/config/mockAuth.js'),
-      'firebase/auth': resolve(__dirname, 'src/config/mockAuth.js'),
-      'firebase/firestore': resolve(__dirname, 'src/config/mockFirestore.js'),
+      ...(mode !== 'production' ? {
+        'firebase/app': resolve(__dirname, 'src/config/mockAuth.js'),
+        'firebase/auth': resolve(__dirname, 'src/config/mockAuth.js'),
+        'firebase/firestore': resolve(__dirname, 'src/config/mockFirestore.js'),
+      } : {}),
     },
   },
   server: {
@@ -25,4 +28,4 @@ export default defineConfig({
       'Cache-Control': 'no-store, no-cache, must-revalidate',
     },
   },
-});
+}));

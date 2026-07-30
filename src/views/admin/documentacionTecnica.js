@@ -10,86 +10,86 @@ export function renderDocumentacionTecnica(container) {
 
 function buildHTML() {
   return `
-    <div class="min-h-screen bg-gray-50">
-      <nav class="bg-white shadow-sm border-b">
+    <div class="min-h-screen">
+      <nav class="glass-nav sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex justify-between h-16">
             <div class="flex items-center gap-3">
-              <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 4px 15px rgba(59,130,246,0.3);">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                 </svg>
               </div>
-              <span class="font-bold text-gray-800">EvalFríoSAG</span>
+              <span class="font-bold text-white">EvalFríoSAG</span>
             </div>
             <div class="flex items-center gap-4">
-              <a href="#/admin/protocolos-sag" class="text-sm text-gray-500 hover:text-primary-600">Protocolos SAG</a>
-              <a href="#/" class="text-sm text-gray-500 hover:text-primary-600">Dashboard</a>
+              <a href="#/admin/protocolos-sag" class="text-sm text-white/50 hover:text-blue-400 transition-colors">Protocolos SAG</a>
+              <a href="#/" class="text-sm text-white/50 hover:text-blue-400 transition-colors">Dashboard</a>
             </div>
           </div>
         </div>
       </nav>
 
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="mb-8">
-          <h1 class="text-2xl font-bold text-gray-900">Documentación Técnica</h1>
-          <p class="text-gray-500 mt-1">Cargar, convertir y revisar documentos técnicos de tratamiento</p>
+        <div class="mb-8 fade-in-up">
+          <h1 class="text-2xl font-bold text-white">Documentación Técnica</h1>
+          <p class="text-white/50 mt-1">Cargar, convertir y revisar documentos técnicos de tratamiento</p>
         </div>
 
         <!-- Upload Zone -->
-        <div id="uploadZone" class="card border-2 border-dashed border-gray-300 hover:border-primary-400 transition-colors cursor-pointer mb-8">
+        <div id="uploadZone" class="glass-card-static cursor-pointer mb-8" style="border: 2px dashed rgba(148,163,184,0.2); background: rgba(30,41,59,0.4); transition: border-color 0.3s;">
           <div class="flex flex-col items-center justify-center py-12">
-            <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-16 h-16 text-white/30 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
             </svg>
-            <p class="text-lg font-medium text-gray-700 mb-2">Arrastra un archivo aquí o haz clic para seleccionar</p>
-            <p class="text-sm text-gray-400 mb-4">Formatos soportados: .xls, .xlsx, .csv, .doc, .docx, .pdf</p>
+            <p class="text-lg font-medium text-white/70 mb-2">Arrastra un archivo aquí o haz clic para seleccionar</p>
+            <p class="text-sm text-white/30 mb-4">Formatos soportados: .xls, .xlsx, .csv, .doc, .docx, .pdf</p>
             <div class="flex flex-wrap gap-2 justify-center">
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Excel</span>
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Word</span>
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">PDF</span>
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">CSV</span>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium" style="background: rgba(34,197,94,0.15); color: #4ade80;">Excel</span>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium" style="background: rgba(59,130,246,0.15); color: #60a5fa;">Word</span>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium" style="background: rgba(239,68,68,0.15); color: #f87171;">PDF</span>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium" style="background: rgba(148,163,184,0.1); color: rgba(255,255,255,0.5);">CSV</span>
             </div>
             <input type="file" id="fileInput" class="hidden" accept=".xls,.xlsx,.csv,.doc,.docx,.pdf">
           </div>
         </div>
 
         <!-- Progress -->
-        <div id="progressSection" class="hidden card mb-8">
+        <div id="progressSection" class="hidden glass-card-static mb-8">
           <div class="flex items-center gap-4 mb-3">
-            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
-            <span id="progressMessage" class="text-gray-700"></span>
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
+            <span id="progressMessage" class="text-white/70"></span>
           </div>
-          <div class="w-full bg-gray-200 rounded-full h-2.5">
-            <div id="progressBar" class="bg-primary-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+          <div style="width:100%; background: rgba(148,163,184,0.15); border-radius: 9999px; height: 0.625rem;">
+            <div id="progressBar" style="background: linear-gradient(90deg, #3b82f6, #2563eb); height: 0.625rem; border-radius: 9999px; transition: width 0.3s; width: 0%;"></div>
           </div>
         </div>
 
         <!-- Result -->
         <div id="resultSection" class="hidden">
           <!-- File Info Card -->
-          <div class="card mb-6">
-            <h2 class="text-lg font-semibold mb-4">Resultado de Conversión</h2>
+          <div class="glass-card-static mb-6 fade-in-up">
+            <h2 class="text-lg font-semibold mb-4 text-white">Resultado de Conversión</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="bg-gray-50 rounded-lg p-4">
-                <h3 class="text-sm font-medium text-gray-500 mb-2">Archivo Original</h3>
-                <p class="font-medium text-gray-900" id="originalName"></p>
+              <div class="rounded-lg p-4" style="background: rgba(15,23,42,0.4);">
+                <h3 class="text-sm font-medium text-white/50 mb-2">Archivo Original</h3>
+                <p class="font-medium text-white" id="originalName"></p>
                 <div class="flex items-center gap-2 mt-1">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-700" id="originalFormat"></span>
-                  <span class="text-sm text-gray-500" id="originalSize"></span>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="background: rgba(148,163,184,0.15); color: rgba(255,255,255,0.7);" id="originalFormat"></span>
+                  <span class="text-sm text-white/50" id="originalSize"></span>
                 </div>
               </div>
-              <div class="bg-green-50 rounded-lg p-4">
-                <h3 class="text-sm font-medium text-gray-500 mb-2">Archivo Convertido</h3>
-                <p class="font-medium text-gray-900" id="convertedName"></p>
+              <div class="rounded-lg p-4" style="background: rgba(34,197,94,0.08);">
+                <h3 class="text-sm font-medium text-white/50 mb-2">Archivo Convertido</h3>
+                <p class="font-medium text-white" id="convertedName"></p>
                 <div class="flex items-center gap-2 mt-1">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-200 text-green-700" id="convertedFormat"></span>
-                  <span class="text-sm text-gray-500" id="convertedSize"></span>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="background: rgba(34,197,94,0.15); color: #4ade80;" id="convertedFormat"></span>
+                  <span class="text-sm text-white/50" id="convertedSize"></span>
                 </div>
               </div>
             </div>
 
-            <div id="conversionStats" class="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-700"></div>
+            <div id="conversionStats" class="mt-4 p-3 rounded-lg text-sm" style="background: rgba(59,130,246,0.1); color: #60a5fa;"></div>
 
             <div class="flex gap-3 mt-6">
               <button id="downloadConvertedBtn" class="btn-primary flex items-center gap-2">
@@ -98,23 +98,23 @@ function buildHTML() {
                 </svg>
                 Descargar Convertido (.xlsx)
               </button>
-              <button id="downloadOriginalBtn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+              <button id="downloadOriginalBtn" class="px-4 py-2 rounded-lg text-white/70 flex items-center gap-2" style="border: 1px solid rgba(148,163,184,0.2); background: rgba(15,23,42,0.4);">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
                 Descargar Original
               </button>
-              <button id="newFileBtn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+              <button id="newFileBtn" class="px-4 py-2 rounded-lg text-white/70" style="border: 1px solid rgba(148,163,184,0.2); background: rgba(15,23,42,0.4);">
                 Cargar otro archivo
               </button>
             </div>
           </div>
 
           <!-- Preview Section -->
-          <div class="card">
+          <div class="glass-card-static fade-in-up">
             <div class="flex items-center justify-between mb-4">
-              <h2 class="text-lg font-semibold">Vista Previa</h2>
-              <span class="text-sm text-gray-400" id="previewInfo"></span>
+              <h2 class="text-lg font-semibold text-white">Vista Previa</h2>
+              <span class="text-sm text-white/30" id="previewInfo"></span>
             </div>
             <div id="previewContent" class="overflow-auto max-h-[600px]"></div>
           </div>
@@ -139,16 +139,19 @@ function attachEvents(container) {
 
   uploadZone.addEventListener('dragover', (e) => {
     e.preventDefault();
-    uploadZone.classList.add('border-primary-500', 'bg-primary-50');
+    uploadZone.style.borderColor = 'rgba(59,130,246,0.6)';
+    uploadZone.style.background = 'rgba(59,130,246,0.08)';
   });
 
   uploadZone.addEventListener('dragleave', () => {
-    uploadZone.classList.remove('border-primary-500', 'bg-primary-50');
+    uploadZone.style.borderColor = 'rgba(148,163,184,0.2)';
+    uploadZone.style.background = 'rgba(30,41,59,0.4)';
   });
 
   uploadZone.addEventListener('drop', (e) => {
     e.preventDefault();
-    uploadZone.classList.remove('border-primary-500', 'bg-primary-50');
+    uploadZone.style.borderColor = 'rgba(148,163,184,0.2)';
+    uploadZone.style.background = 'rgba(30,41,59,0.4)';
     const file = e.dataTransfer.files[0];
     if (file) handleFile(file);
   });
@@ -222,7 +225,7 @@ function attachEvents(container) {
     const info = document.getElementById('previewInfo');
 
     if (!preview) {
-      el.innerHTML = '<p class="text-gray-400 text-center py-8">Sin vista previa disponible</p>';
+      el.innerHTML = '<p class="text-white/30 text-center py-8">Sin vista previa disponible</p>';
       return;
     }
 
@@ -234,7 +237,7 @@ function attachEvents(container) {
       if (sheetNames.length > 1) {
         html += '<div class="flex gap-2 mb-4 flex-wrap">';
         sheetNames.forEach((name, i) => {
-          html += `<button class="sheet-tab px-3 py-1 rounded-lg text-sm font-medium ${i === 0 ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}" data-sheet="${name}">${escapeHtml(name)}</button>`;
+          html += `<button class="sheet-tab px-3 py-1 rounded-lg text-sm font-medium ${i === 0 ? 'btn-primary' : 'btn-secondary'}" data-sheet="${name}">${escapeHtml(name)}</button>`;
         });
         html += '</div>';
       }
@@ -243,10 +246,10 @@ function attachEvents(container) {
         const sheet = preview.sheets[name];
         const isVisible = i === 0 ? '' : 'hidden';
         html += `<div class="sheet-content ${isVisible}" data-sheet="${name}">`;
-        html += `<p class="text-sm text-gray-500 mb-2">${sheet.totalRows} fila(s) de datos</p>`;
+        html += `<p class="text-sm text-white/50 mb-2">${sheet.totalRows} fila(s) de datos</p>`;
         html += renderTable(sheet.headers, sheet.rows);
         if (sheet.totalRows > 50) {
-          html += `<p class="text-sm text-gray-400 mt-2 text-center">Mostrando primeras 50 de ${sheet.totalRows} filas</p>`;
+          html += `<p class="text-sm text-white/30 mt-2 text-center">Mostrando primeras 50 de ${sheet.totalRows} filas</p>`;
         }
         html += '</div>';
       });
@@ -256,11 +259,11 @@ function attachEvents(container) {
       el.querySelectorAll('.sheet-tab').forEach(tab => {
         tab.addEventListener('click', () => {
           el.querySelectorAll('.sheet-tab').forEach(t => {
-            t.classList.remove('bg-primary-600', 'text-white');
-            t.classList.add('bg-gray-100', 'text-gray-600');
+            t.classList.remove('btn-primary');
+            t.classList.add('btn-secondary');
           });
-          tab.classList.add('bg-primary-600', 'text-white');
-          tab.classList.remove('bg-gray-100', 'text-gray-600');
+          tab.classList.add('btn-primary');
+          tab.classList.remove('btn-secondary');
 
           el.querySelectorAll('.sheet-content').forEach(c => c.classList.add('hidden'));
           el.querySelector(`.sheet-content[data-sheet="${tab.dataset.sheet}"]`).classList.remove('hidden');
@@ -269,27 +272,27 @@ function attachEvents(container) {
 
     } else if (preview.type === 'text') {
       info.textContent = `${preview.lines.length} líneas extraídas`;
-      el.innerHTML = `<pre class="text-sm text-gray-700 whitespace-pre-wrap font-mono bg-gray-50 p-4 rounded-lg">${escapeHtml(preview.text).substring(0, 10000)}</pre>`;
+      el.innerHTML = `<pre class="text-sm text-white/70 whitespace-pre-wrap font-mono p-4 rounded-lg" style="background: rgba(15,23,42,0.4);">${escapeHtml(preview.text).substring(0, 10000)}</pre>`;
 
     } else if (preview.type === 'html') {
       info.textContent = `${preview.textLines.length} líneas extraídas`;
       el.innerHTML = `
-        <div class="prose prose-sm max-w-none bg-gray-50 p-4 rounded-lg overflow-auto max-h-[500px]">${preview.html}</div>
+        <div class="prose prose-sm max-w-none p-4 rounded-lg overflow-auto max-h-[500px]" style="background: rgba(15,23,42,0.4);">${preview.html}</div>
       `;
     }
   }
 
   function renderTable(headers, rows) {
-    let html = '<div class="overflow-x-auto"><table class="min-w-full text-sm"><thead><tr class="bg-gray-50">';
+    let html = '<div class="overflow-x-auto"><table class="min-w-full text-sm"><thead><tr style="background: rgba(15,23,42,0.4);">';
     headers.forEach(h => {
-      html += `<th class="px-3 py-2 text-left font-medium text-gray-600 border-b">${escapeHtml(h)}</th>`;
+      html += `<th class="px-3 py-2 text-left font-medium text-white/60" style="border-bottom: 1px solid rgba(148,163,184,0.15);">${escapeHtml(h)}</th>`;
     });
     html += '</tr></thead><tbody>';
     rows.forEach((row, ri) => {
-      const cls = ri % 2 === 0 ? 'bg-white' : 'bg-gray-50/50';
-      html += `<tr class="${cls}">`;
+      const bg = ri % 2 === 0 ? 'rgba(15,23,42,0.2)' : 'rgba(148,163,184,0.06)';
+      html += `<tr style="background: ${bg};">`;
       row.forEach(cell => {
-        html += `<td class="px-3 py-1.5 border-b border-gray-100 text-gray-700">${escapeHtml(cell)}</td>`;
+        html += `<td class="px-3 py-1.5 text-white/70" style="border-bottom: 1px solid rgba(148,163,184,0.1);">${escapeHtml(cell)}</td>`;
       });
       html += '</tr>';
     });

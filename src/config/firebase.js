@@ -1,6 +1,6 @@
-const isDevMode = true;
-
 let auth, db, storage;
+
+const isDevMode = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
 if (isDevMode) {
   console.warn('[DEV MODE] Firebase no configurado. Usando almacenamiento local.');
@@ -36,12 +36,12 @@ if (isDevMode) {
   const { getStorage } = await import('firebase/storage');
 
   const firebaseConfig = {
-    apiKey: "TU_API_KEY",
-    authDomain: "TU_PROJECT.firebaseapp.com",
-    projectId: "TU_PROJECT_ID",
-    storageBucket: "TU_PROJECT.appspot.com",
-    messagingSenderId: "TU_SENDER_ID",
-    appId: "TU_APP_ID"
+    apiKey: "AIzaSyAPg-iyrPHhtUk-wbRR-vwZIuIzUxQSxf0",
+    authDomain: "tratamiento-de-frio.firebaseapp.com",
+    projectId: "tratamiento-de-frio",
+    storageBucket: "tratamiento-de-frio.firebasestorage.app",
+    messagingSenderId: "489852863950",
+    appId: "1:489852863950:web:494a266878ad5e061dd79f"
   };
 
   const app = initializeApp(firebaseConfig);

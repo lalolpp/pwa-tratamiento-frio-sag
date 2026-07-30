@@ -95,8 +95,13 @@ async function convertExcel(file, onProgress) {
 
   if (onProgress) onProgress({ stage: 'converting', percent: 70, message: 'Generando archivo .xlsx...' });
 
+  const cleanedSheets = {};
+  workbook.SheetNames.forEach(name => {
+    cleanedSheets[name] = cleanSAGSheet(sheets[name]);
+  });
+
   const newWb = XLSX.utils.book_new();
-  Object.entries(sheets).forEach(([name, data]) => {
+  Object.entries(cleanedSheets).forEach(([name, data]) => {
     const ws = XLSX.utils.aoa_to_sheet(data);
     XLSX.utils.book_append_sheet(newWb, ws, name);
   });
@@ -104,7 +109,7 @@ async function convertExcel(file, onProgress) {
   const xlsxBuffer = XLSX.write(newWb, { type: 'array', bookType: 'xlsx' });
   const blob = new Blob([xlsxBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
-  const preview = buildExcelPreview(sheets, workbook.SheetNames);
+  const preview = buildExcelPreview(cleanedSheets, workbook.SheetNames);
 
   return {
     convertedBlob: blob,
@@ -113,10 +118,100 @@ async function convertExcel(file, onProgress) {
     preview,
     stats: {
       sheets: workbook.SheetNames.length,
-      totalRows,
+      totalRows: cleanedSheets[workbook.SheetNames[0]]?.length ? cleanedSheets[workbook.SheetNames[0]].length - 1 : totalRows,
       sheetNames: workbook.SheetNames,
     },
   };
+}
+
+function cleanSAGSheet(rows) {
+  if (!rows || rows.length < 5) return rows;
+
+  const headerRowIndex = findDataHeaderRow(rows);
+  if (headerRowIndex < 0) return rows;
+
+  const dataRows = rows.slice(headerRowIndex);
+  if (dataRows.length < 2) return rows;
+
+  const usedCols = findUsedColumns(dataRows);
+  if (!usedCols || usedCols.length === 0) return rows;
+
+  const headerKeys = usedCols.map(ci => String(dataRows[0][ci] || '').trim());
+  const isSparse = detectSparseColumns(dataRows, usedCols);
+  if (!isSparse) return rows;
+
+  const isSAGFormat = headerKeys.some(k => /^(fecha|date)$/i.test(k)) &&
+    headerKeys.some(k => /^(hora|time)$/i.test(k)) &&
+    headerKeys.some(k => /^pulpa/i.test(k) || /^sensor/i.test(k) || /^sonda/i.test(k) || /^%?hr$/i.test(k) || /^%?rh$/i.test(k));
+
+  if (!isSAGFormat) return rows;
+
+  const cleaned = dataRows.map((row, ri) => {
+    return usedCols.map((ci, ki) => {
+      const val = row[ci];
+      const key = headerKeys[ki];
+      if (ri === 0) return key;
+      if (val == null || val === '') return '';
+      if (isDateOrTimeColumn(key)) return val;
+      if (typeof val === 'number') {
+        return Math.round(val * 10) / 10;
+      }
+      if (typeof val === 'string') {
+        const num = parseFloat(val.replace(',', '.'));
+        if (!isNaN(num)) {
+          return Math.round(num * 10) / 10;
+        }
+      }
+      return val;
+    });
+  });
+
+  return cleaned;
+}
+
+function findDataHeaderRow(rows) {
+  for (let i = 0; i < Math.min(rows.length, 60); i++) {
+    const row = rows[i];
+    if (!row) continue;
+    let hasDate = false, hasTime = false, hasSensor = false;
+    for (let j = 0; j < row.length; j++) {
+      const cell = String(row[j] || '').toLowerCase().trim();
+      if (!cell) continue;
+      if (/^(fecha|date|fec)$/.test(cell)) hasDate = true;
+      if (/^(hora|time|hor)$/.test(cell)) hasTime = true;
+      if (/^pulpa/i.test(cell) || /^sensor\s*\d+/i.test(cell) || /^sonda\s*\d+/i.test(cell) ||
+          /^s\d+/i.test(cell) || /^p\d+/i.test(cell) || /^%?hr$/i.test(cell) || /^%?rh$/i.test(cell) ||
+          /^humedad/i.test(cell) || /^temp/i.test(cell)) hasSensor = true;
+    }
+    if (hasDate && hasSensor) return i;
+  }
+  return -1;
+}
+
+function findUsedColumns(rows) {
+  const colSet = new Set();
+  for (let r = 0; r < Math.min(rows.length, 5); r++) {
+    const row = rows[r];
+    if (!row) continue;
+    for (let c = 0; c < row.length; c++) {
+      if (row[c] != null && row[c] !== '') {
+        colSet.add(c);
+      }
+    }
+  }
+  return colSet.size > 0 ? [...colSet].sort((a, b) => a - b) : null;
+}
+
+function detectSparseColumns(rows, usedCols) {
+  if (usedCols.length < 2) return false;
+  const totalCols = rows[0] ? rows[0].length : 0;
+  if (totalCols === 0) return false;
+  const ratio = (usedCols[usedCols.length - 1] + 1) / usedCols.length;
+  return ratio > 3;
+}
+
+function isDateOrTimeColumn(key) {
+  return /^(fecha|date|hora|time)$/i.test(String(key || '').trim());
 }
 
 async function convertCSV(file, onProgress) {

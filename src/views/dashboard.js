@@ -25,7 +25,7 @@ function buildDashboardHTML(user) {
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                 </svg>
               </div>
-              <span class="font-bold text-white text-lg">EvalFríoSAG</span>
+              <span class="font-bold text-white text-lg">Tratamiento de Frío</span>
             </div>
             <div class="flex items-center gap-4">
               <span class="text-sm text-white/60">${user.email}</span>
@@ -195,7 +195,35 @@ function attachDashboardEvents(container) {
     window.location.hash = '#/login';
   });
 
+  loadStats(container);
   loadRecentEvaluations(container);
+}
+
+async function loadStats(container) {
+  try {
+    const evaluationsRef = collection(db, 'evaluations');
+    const snapshot = await getDocs(evaluationsRef);
+    const total = snapshot.size;
+    let approved = 0, rejected = 0, pending = 0;
+    snapshot.docs.forEach(doc => {
+      const data = doc.data();
+      if (data.result?.status === 'aprobado') approved++;
+      else if (data.result?.status === 'no_aprobado') rejected++;
+      else pending++;
+    });
+    const el = (id) => container.querySelector(`#${id}`);
+    el('statTotal').textContent = total;
+    el('statApproved').textContent = approved;
+    el('statRejected').textContent = rejected;
+    el('statPending').textContent = pending;
+  } catch (error) {
+    console.error('Error loading stats:', error);
+    const el = (id) => document.querySelector(`#${id}`);
+    el('statTotal').textContent = '?';
+    el('statApproved').textContent = '?';
+    el('statRejected').textContent = '?';
+    el('statPending').textContent = '?';
+  }
 }
 
 async function loadRecentEvaluations(container) {
@@ -241,5 +269,15 @@ async function loadRecentEvaluations(container) {
     }
   } catch (error) {
     console.error('Error loading evaluations:', error);
+    const tbody = container.querySelector('#recentEvaluations');
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center py-8 text-red-400">
+            Error: ${error.message}
+          </td>
+        </tr>
+      `;
+    }
   }
 }

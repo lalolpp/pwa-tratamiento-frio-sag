@@ -22,8 +22,9 @@ const routes = {
 
 export function initRouter(appEl) {
   function navigate() {
-    const hash = window.location.hash.slice(1) || '/';
-    const handler = routes[hash] || routes['/'];
+    const fullHash = window.location.hash.slice(1) || '/';
+    const path = fullHash.split('?')[0];
+    const handler = routes[path] || routes['/'];
     handler(appEl);
   }
 

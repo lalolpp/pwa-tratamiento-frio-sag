@@ -12,11 +12,11 @@ export function renderChambers(container) {
 
 function buildChambersHTML() {
   return `
-    <div class="min-h-screen bg-gray-50">
-      <nav class="bg-white shadow-sm border-b">
+    <div class="min-h-screen">
+      <nav class="glass-nav sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex items-center h-16 gap-4">
-            <a href="#/" class="text-gray-500 hover:text-gray-700">
+            <a href="#/" class="text-white/50 hover:text-white/80 transition-colors">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
               </svg>
@@ -26,40 +26,40 @@ function buildChambersHTML() {
         </div>
       </nav>
 
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 fade-in-up">
         <div class="flex items-center justify-between mb-6">
           <h1 class="text-xl font-bold">Cámaras Frigoríficas</h1>
           <button id="addChamberBtn" class="btn-primary">+ Nueva Cámara</button>
         </div>
 
-        <div id="chamberForm" class="card mb-6 hidden">
+        <div id="chamberForm" class="glass-card-static mb-6 hidden">
           <h3 class="font-semibold mb-4">Nueva Cámara</h3>
           <form id="saveChamberForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label class="label">Nombre *</label>
-              <input type="text" id="chamberName" class="input-field" placeholder="Ej: CA-05" required />
+              <input type="text" id="chamberName" class="glass-input" placeholder="Ej: CA-05" required />
             </div>
             <div>
               <label class="label">Tipo *</label>
-              <select id="chamberType" class="input-field" required>
+              <select id="chamberType" class="glass-input" required>
                 <option value="convencional">Convencional</option>
                 <option value="atmosfera_controlada">Atmósfera Controlada</option>
               </select>
             </div>
             <div>
               <label class="label">Almacenamiento *</label>
-              <select id="chamberStorage" class="input-field" required>
+              <select id="chamberStorage" class="glass-input" required>
                 <option value="bins">Bins</option>
                 <option value="embalada">Embalada</option>
               </select>
             </div>
             <div>
               <label class="label">Cantidad Sensores Pulpa</label>
-              <input type="number" id="chamberSensorCount" class="input-field" value="2" />
+              <input type="number" id="chamberSensorCount" class="glass-input" value="2" />
             </div>
             <div>
               <label class="label">Frío en parte media del techo</label>
-              <select id="chamberMidCeiling" class="input-field">
+              <select id="chamberMidCeiling" class="glass-input">
                 <option value="false">No</option>
                 <option value="true">Sí</option>
               </select>
@@ -71,7 +71,7 @@ function buildChambersHTML() {
           </form>
         </div>
 
-        <div class="card">
+        <div class="glass-card-static fade-in-up">
           <div class="table-container">
             <table class="data-table">
               <thead>
@@ -87,7 +87,7 @@ function buildChambersHTML() {
               </thead>
               <tbody id="chambersBody">
                 <tr>
-                  <td colspan="7" class="text-center py-8 text-gray-400">Cargando...</td>
+                  <td colspan="7" class="text-center py-8 text-white/30">Cargando...</td>
                 </tr>
               </tbody>
             </table>
@@ -141,7 +141,7 @@ async function loadChambers(container) {
     if (snapshot.empty) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" class="text-center py-8 text-gray-400">
+          <td colspan="7" class="text-center py-8 text-white/30">
             No hay cámaras registradas. Agregue una para comenzar.
           </td>
         </tr>
