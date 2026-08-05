@@ -1,6 +1,5 @@
 import { requireAuth } from '../auth/authGuard.js';
-import { db } from '../config/firebase.js';
-import { doc, getDoc } from 'firebase/firestore';
+import { get } from '../services/localStore.js';
 
 export function renderEvaluationResult(container) {
   requireAuth(async (user) => {
@@ -20,9 +19,9 @@ export function renderEvaluationResult(container) {
     }
 
     try {
-      const evalDoc = await getDoc(doc(db, 'evaluations', evalId));
+      const data = await get('evaluations', evalId);
 
-      if (!evalDoc.exists()) {
+      if (!data) {
         container.innerHTML = `
           <div class="min-h-screen flex items-center justify-center">
             <div class="text-center">
@@ -34,7 +33,6 @@ export function renderEvaluationResult(container) {
         return;
       }
 
-      const data = evalDoc.data();
       renderResult(container, data);
     } catch (error) {
       console.error('Error loading evaluation:', error);

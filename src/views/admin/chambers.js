@@ -1,6 +1,6 @@
 import { requireAuth } from '../../auth/authGuard.js';
-import { db } from '../../config/firebase.js';
-import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { getAll } from '../../services/localStore.js';
+import { saveChamber, deleteDocument } from '../../services/offlineService.js';
 
 export function renderChambers(container) {
   requireAuth(async (user) => {
@@ -117,12 +117,10 @@ function attachChambersEvents(container, user) {
       sensorCount: parseInt(container.querySelector('#chamberSensorCount').value) || 2,
       hasMidCeiling: container.querySelector('#chamberMidCeiling').value === 'true',
       status: 'activa',
-      createdBy: user.email,
-      createdAt: serverTimestamp(),
     };
 
     try {
-      await addDoc(collection(db, 'chambers'), newChamber);
+      await saveChamber(user, newChamber);
       form.classList.add('hidden');
       saveForm.reset();
       await loadChambers(container);
@@ -134,11 +132,10 @@ function attachChambersEvents(container, user) {
 
 async function loadChambers(container) {
   try {
-    const chambersRef = collection(db, 'chambers');
-    const snapshot = await getDocs(chambersRef);
+    const chambers = await getAll('chambers');
     const tbody = container.querySelector('#chambersBody');
 
-    if (snapshot.empty) {
+    if (chambers.length === 0) {
       tbody.innerHTML = `
         <tr>
           <td colspan="7" class="text-center py-8 text-white/30">
@@ -149,8 +146,7 @@ async function loadChambers(container) {
       return;
     }
 
-    tbody.innerHTML = snapshot.docs.map(doc => {
-      const c = doc.data();
+    tbody.innerHTML = chambers.map(c => {
       return `
         <tr>
           <td class="font-medium">${c.name}</td>
@@ -160,7 +156,7 @@ async function loadChambers(container) {
           <td>${c.hasMidCeiling ? 'Sí' : 'No'}</td>
           <td><span class="badge-success">${c.status}</span></td>
           <td>
-            <button class="text-red-400 hover:text-red-600 text-sm delete-chamber" data-id="${doc.id}">Eliminar</button>
+            <button class="text-red-400 hover:text-red-600 text-sm delete-chamber" data-id="${c.id}">Eliminar</button>
           </td>
         </tr>
       `;
@@ -169,7 +165,7 @@ async function loadChambers(container) {
     tbody.querySelectorAll('.delete-chamber').forEach(btn => {
       btn.addEventListener('click', async () => {
         if (confirm('¿Eliminar esta cámara?')) {
-          await deleteDoc(doc(db, 'chambers', btn.dataset.id));
+          await deleteDocument('chambers', btn.dataset.id);
           await loadChambers(container);
         }
       });

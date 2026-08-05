@@ -1,0 +1,8 @@
+{
+  "appId": "cl.sag.tratamiento.frio",
+  "appName": "Tratamiento Frio SAG",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

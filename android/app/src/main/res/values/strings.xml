@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tratamiento Frio SAG</string>
+    <string name="title_activity_main">Tratamiento Frio SAG</string>
+    <string name="package_name">cl.sag.tratamiento.frio</string>
+    <string name="custom_url_scheme">cl.sag.tratamiento.frio</string>
+</resources>

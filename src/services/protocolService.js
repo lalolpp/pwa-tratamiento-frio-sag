@@ -1,27 +1,43 @@
+import * as local from './localStore.js';
 import {
-  collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc,
-  query, where, orderBy, serverTimestamp, writeBatch,
-} from 'firebase/firestore';
-import { db } from '../config/firebase.js';
-import { INITIAL_PROTOCOLS } from '../config/sagData.js';
+  updateDocument, deleteDocument, saveDocument, offlineCollections, stableProtocolId,
+} from './offlineService.js';
 
-const COLLECTION = 'protocolos_sag';
+const COLLECTION = offlineCollections.PROTOCOLS;
+
+async function ensureSeeded() {
+  const all = await local.getAll(COLLECTION);
+  if (all.length > 0) return all;
+  const { INITIAL_PROTOCOLS } = await import('../config/sagData.js');
+  const now = Date.now();
+  const seeded = INITIAL_PROTOCOLS.map(p => ({
+    ...p,
+    id: stableProtocolId(p),
+    createdAt: now,
+    updatedAt: now,
+    _updatedAt: now,
+  }));
+  for (const rec of seeded) {
+    await local.upsert(COLLECTION, rec);
+  }
+  return seeded;
+}
 
 export async function getAllProtocols() {
-  const snap = await getDocs(collection(db, COLLECTION));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const all = await ensureSeeded();
+  return all.map(({ id, _updatedAt, ...rest }) => ({ id, ...rest }));
 }
 
 export async function getProtocolById(id) {
-  const snap = await getDoc(doc(db, COLLECTION, id));
-  if (!snap.exists()) return null;
-  return { id: snap.id, ...snap.data() };
+  const rec = await local.get(COLLECTION, id);
+  if (!rec) return null;
+  const { id: docId, _updatedAt, ...rest } = rec;
+  return { id: docId, ...rest };
 }
 
 export async function getProtocolsByCountry(country) {
-  const q = query(collection(db, COLLECTION), where('pais', '==', country));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const all = await getAllProtocols();
+  return all.filter(p => p.pais === country);
 }
 
 export async function findProtocolByCombination(pais, producto, variedad) {
@@ -33,37 +49,24 @@ export async function findProtocolByCombination(pais, producto, variedad) {
 }
 
 export async function createProtocol(protocolData) {
-  const docRef = await addDoc(collection(db, COLLECTION), {
-    ...protocolData,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  return docRef.id;
+  return saveDocument(COLLECTION, protocolData);
 }
 
 export async function updateProtocol(id, updates) {
-  const docRef = doc(db, COLLECTION, id);
-  await updateDoc(docRef, {
-    ...updates,
-    updatedAt: serverTimestamp(),
-  });
+  await updateDocument(COLLECTION, id, updates);
 }
 
 export async function deleteProtocol(id) {
-  await deleteDoc(doc(db, COLLECTION, id));
+  await deleteDocument(COLLECTION, id);
 }
 
 export async function seedInitialProtocols() {
-  const existing = await getAllProtocols();
+  const existing = await local.getAll(COLLECTION);
   if (existing.length > 0) return { seeded: 0, existing: existing.length };
-
+  const { INITIAL_PROTOCOLS } = await import('../config/sagData.js');
   let seeded = 0;
   for (const proto of INITIAL_PROTOCOLS) {
-    await addDoc(collection(db, COLLECTION), {
-      ...proto,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+    await saveDocument(COLLECTION, proto);
     seeded++;
   }
   return { seeded, existing: 0 };

@@ -1,9 +1,10 @@
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
-import { db } from '../config/firebase.js';
 import { requireAuth } from '../auth/authGuard.js';
 import { navigateTo } from '../utils/router.js';
-import { signOut } from 'firebase/auth';
-import { auth } from '../config/firebase.js';
+import { lock } from '../auth/localAuth.js';
+import { getAll } from '../services/localStore.js';
+import { syncAll, toDisplayDate, timestampToMs, isOnline } from '../services/offlineService.js';
+
+const EVALUATIONS = 'evaluations';
 
 export function renderDashboard(container) {
   requireAuth(async (user) => {
@@ -28,6 +29,10 @@ function buildDashboardHTML(user) {
               <span class="font-bold text-white text-lg">Tratamiento de Frío</span>
             </div>
             <div class="flex items-center gap-4">
+              <span id="connBadge" class="text-xs px-2 py-1 rounded-lg" style="border: 1px solid rgba(148,163,184,0.2);">
+                <span class="inline-block w-2 h-2 rounded-full mr-1.5" id="connDot" style="background: #facc15;"></span>
+                <span id="connText">Conectando...</span>
+              </span>
               <span class="text-sm text-white/60">${user.email}</span>
               <button id="logoutBtn" class="text-sm text-white/50 hover:text-white/80 transition-colors duration-200">Salir</button>
             </div>
@@ -42,12 +47,20 @@ function buildDashboardHTML(user) {
             <h1 class="text-3xl font-bold text-white">Dashboard</h1>
             <p class="text-white/50 mt-1">Evaluador de Tratamientos de Frío</p>
           </div>
-          <button id="newEvalBtn" class="btn-primary flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Nueva Evaluación
-          </button>
+          <div class="flex items-center gap-3">
+            <button id="refreshBtn" class="px-4 py-2 rounded-lg text-white/80 flex items-center gap-2 transition-colors duration-200" style="border: 1px solid rgba(148,163,184,0.25); background: rgba(15,23,42,0.4);">
+              <svg id="refreshIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Actualizar
+            </button>
+            <button id="newEvalBtn" class="btn-primary flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Nueva Evaluación
+            </button>
+          </div>
         </div>
 
         <!-- Stats Cards -->
@@ -190,8 +203,37 @@ function attachDashboardEvents(container) {
     navigateTo('/nueva-evaluacion');
   });
 
-  document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-    await signOut(auth);
+  const connDot = container.querySelector('#connDot');
+  const connText = container.querySelector('#connText');
+  const updateConn = () => {
+    if (!connDot || !connText) return;
+    if (isOnline()) {
+      connDot.style.background = '#34d399';
+      connText.textContent = 'En línea';
+    } else {
+      connDot.style.background = '#f87171';
+      connText.textContent = 'Sin conexión';
+    }
+  };
+  updateConn();
+  window.addEventListener('online', updateConn);
+  window.addEventListener('offline', updateConn);
+
+  document.getElementById('refreshBtn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('refreshBtn');
+    const icon = document.getElementById('refreshIcon');
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    icon.style.animation = 'spin 0.8s linear infinite';
+    await syncAll();
+    await Promise.allSettled([loadStats(container), loadRecentEvaluations(container)]);
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    icon.style.animation = '';
+  });
+
+  document.getElementById('logoutBtn')?.addEventListener('click', () => {
+    lock();
     window.location.hash = '#/login';
   });
 
@@ -201,12 +243,10 @@ function attachDashboardEvents(container) {
 
 async function loadStats(container) {
   try {
-    const evaluationsRef = collection(db, 'evaluations');
-    const snapshot = await getDocs(evaluationsRef);
-    const total = snapshot.size;
+    const evaluations = await getAll(EVALUATIONS);
+    const total = evaluations.length;
     let approved = 0, rejected = 0, pending = 0;
-    snapshot.docs.forEach(doc => {
-      const data = doc.data();
+    evaluations.forEach(data => {
       if (data.result?.status === 'aprobado') approved++;
       else if (data.result?.status === 'no_aprobado') rejected++;
       else pending++;
@@ -228,23 +268,21 @@ async function loadStats(container) {
 
 async function loadRecentEvaluations(container) {
   try {
-    const evaluationsRef = collection(db, 'evaluations');
-    const q = query(evaluationsRef, orderBy('createdAt', 'desc'), limit(5));
-    const snapshot = await getDocs(q);
+    const evaluations = await getAll(EVALUATIONS);
+    const recent = [...evaluations]
+      .sort((a, b) => (timestampToMs(b.createdAt) || 0) - (timestampToMs(a.createdAt) || 0))
+      .slice(0, 5);
 
     const tbody = container.querySelector('#recentEvaluations');
-    if (!snapshot.empty) {
-      tbody.innerHTML = snapshot.docs.map(doc => {
-        const data = doc.data();
-        const date = data.createdAt?.toDate?.()
-          ? data.createdAt.toDate().toLocaleDateString('es-CL')
-          : '-';
+    if (recent.length > 0) {
+      tbody.innerHTML = recent.map(data => {
+        const date = toDisplayDate(data.createdAt);
         const badge = data.result?.status === 'aprobado'
           ? '<span class="badge-success">Aprobado</span>'
           : '<span class="badge-danger">No Aprobado</span>';
 
         return `
-          <tr class="cursor-pointer" onclick="window.location.hash='#/evaluacion?id=${doc.id}'">
+          <tr class="cursor-pointer" onclick="window.location.hash='#/evaluacion?id=${data.id}'">
             <td>${date}</td>
             <td>${data.data?.metadata?.cameraName || '-'}</td>
             <td>${data.data?.metadata?.product || '-'} ${data.data?.metadata?.variety || ''}</td>

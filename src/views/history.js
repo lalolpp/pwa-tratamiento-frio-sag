@@ -1,9 +1,9 @@
 import { requireAuth } from '../auth/authGuard.js';
-import { db } from '../config/firebase.js';
-import { collection, query, orderBy, limit, getDocs, startAfter } from 'firebase/firestore';
+import { getAll } from '../services/localStore.js';
+import { toDisplayDate, timestampToMs } from '../services/offlineService.js';
 
-let lastDoc = null;
 const PAGE_SIZE = 20;
+let currentIndex = 0;
 
 export function renderHistory(container) {
   requireAuth(async (user) => {
@@ -75,38 +75,30 @@ function attachHistoryEvents(container) {
 
 async function loadEvaluations(container, append = false) {
   try {
-    const evaluationsRef = collection(db, 'evaluations');
-    let q;
+    const all = await getAll('evaluations');
+    const sorted = [...all]
+      .sort((a, b) => (timestampToMs(b.createdAt) || 0) - (timestampToMs(a.createdAt) || 0));
 
-    if (append && lastDoc) {
-      q = query(evaluationsRef, orderBy('createdAt', 'desc'), startAfter(lastDoc), limit(PAGE_SIZE));
-    } else {
-      q = query(evaluationsRef, orderBy('createdAt', 'desc'), limit(PAGE_SIZE));
+    if (!append) {
+      currentIndex = 0;
     }
 
-    const snapshot = await getDocs(q);
+    const page = sorted.slice(currentIndex, currentIndex + PAGE_SIZE);
     const tbody = container.querySelector('#historyBody');
 
-    if (!append) tbody.innerHTML = '';
-
-    if (snapshot.empty && !append) {
+    if (page.length === 0 && !append) {
       tbody.innerHTML = `
         <tr>
           <td colspan="8" class="text-center py-8 text-white/30">No hay evaluaciones registradas</td>
         </tr>
       `;
+      const loadMoreContainer = container.querySelector('#loadMoreContainer');
+      loadMoreContainer?.classList.add('hidden');
       return;
     }
 
-    if (snapshot.docs.length > 0) {
-      lastDoc = snapshot.docs[snapshot.docs.length - 1];
-    }
-
-    snapshot.docs.forEach(doc => {
-      const data = doc.data();
-      const date = data.createdAt?.toDate?.()
-        ? data.createdAt.toDate().toLocaleDateString('es-CL')
-        : '-';
+    page.forEach(data => {
+      const date = toDisplayDate(data.createdAt);
       const badge = data.result?.status === 'aprobado'
         ? '<span class="badge-success">Aprobado</span>'
         : '<span class="badge-danger">No Aprobado</span>';
@@ -115,7 +107,7 @@ async function loadEvaluations(container, append = false) {
 
       const row = document.createElement('tr');
       row.className = 'cursor-pointer';
-      row.onclick = () => { window.location.hash = `#/evaluacion?id=${doc.id}`; };
+      row.onclick = () => { window.location.hash = `#/evaluacion?id=${data.id}`; };
       row.innerHTML = `
         <td>${date}</td>
         <td>${meta.cameraName || '-'}</td>
@@ -129,11 +121,13 @@ async function loadEvaluations(container, append = false) {
       tbody.appendChild(row);
     });
 
+    currentIndex += page.length;
+
     const loadMoreContainer = container.querySelector('#loadMoreContainer');
-    if (snapshot.docs.length >= PAGE_SIZE) {
-      loadMoreContainer.classList.remove('hidden');
+    if (currentIndex < sorted.length) {
+      loadMoreContainer?.classList.remove('hidden');
     } else {
-      loadMoreContainer.classList.add('hidden');
+      loadMoreContainer?.classList.add('hidden');
     }
   } catch (error) {
     console.error('Error loading history:', error);

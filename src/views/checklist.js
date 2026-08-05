@@ -1,6 +1,5 @@
 import { requireAuth } from '../auth/authGuard.js';
-import { signOut } from 'firebase/auth';
-import { auth } from '../config/firebase.js';
+import { lock } from '../auth/localAuth.js';
 import { navigateTo } from '../utils/router.js';
 import {
   SAG_COUNTRIES, SAG_VARIETIES, SAG_FAMILIES, QUARANTINE_PESTS, TREATMENT_TYPES,
@@ -39,8 +38,8 @@ function shellHTML(user) {
 }
 
 function attachEvents(container, user) {
-  document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-    await signOut(auth);
+  document.getElementById('logoutBtn')?.addEventListener('click', () => {
+    lock();
     window.location.hash = '#/login';
   });
   renderSelector(container);

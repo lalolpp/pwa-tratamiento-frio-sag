@@ -1,19 +1,11 @@
-import { auth } from './config/firebase.js';
-import { onAuthStateChanged } from 'firebase/auth';
 import { initRouter } from './utils/router.js';
+import { initOffline } from './services/offlineService.js';
 
 import './styles/main.css';
 
-onAuthStateChanged(auth, (user) => {
-  const app = document.getElementById('app');
-  if (user) {
-    initRouter(app);
-  } else {
-    import('./views/login.js').then((mod) => {
-      mod.renderLogin(app);
-    });
-  }
-});
+initOffline();
+
+initRouter(document.getElementById('app'));
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {

@@ -2,8 +2,7 @@ import { parseExcelFile, getPreviewData } from '../engine/parser.js';
 import { evaluate } from '../engine/evaluator.js';
 import { requireAuth } from '../auth/authGuard.js';
 import { navigateTo } from '../utils/router.js';
-import { db } from '../config/firebase.js';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { saveEvaluation } from '../services/offlineService.js';
 import {
   SAG_VARIETIES, SAG_COUNTRIES, SAG_FAMILIES,
   SDP_CATEGORIES, QUARANTINE_PESTS, TREATMENT_TYPES,
@@ -625,21 +624,19 @@ function renderStep3(container, user) {
   `;
 
   container.querySelector('#saveAndBack').addEventListener('click', async () => {
-    await saveEvaluation(user);
+    await persistEvaluation(user);
     navigateTo('/');
   });
 
   container.querySelector('#downloadReport').addEventListener('click', async () => {
-    await saveEvaluation(user);
+    await persistEvaluation(user);
     generatePDFReport();
   });
 }
 
-async function saveEvaluation(user) {
+async function persistEvaluation(user) {
   try {
-    await addDoc(collection(db, 'evaluations'), {
-      userId: user.uid,
-      userEmail: user.email,
+    await saveEvaluation(user, {
       data: {
         metadata: currentState.metadata,
         sensorConfig: currentState.sensorConfig,
@@ -660,8 +657,6 @@ async function saveEvaluation(user) {
         observaciones: currentState.protocol.observaciones || null,
       },
       result: currentState.result,
-      createdAt: serverTimestamp(),
-      status: 'completada',
     });
   } catch (error) {
     console.error('Error saving evaluation:', error);
